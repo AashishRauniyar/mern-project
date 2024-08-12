@@ -18,7 +18,7 @@ const UserSchema = new Schema({
         lowercase: true,
         trim : true
     },
-    fullname:{
+    fullName:{
         type: String,
         required: true,
         trim : true,
@@ -51,14 +51,43 @@ const UserSchema = new Schema({
 // to encrypt password
 UserSchema.pre("save", async function (next){
     if(!this.isModified("password")) return next();
-
     this.password = bcrypt.hash(this.password, 10)
     next()
 })
 
 // to compare password
-UserSchema.method.isPasswordCorrect = async function(password){
+UserSchema.methods.isPasswordCorrect = async function(password){
     return await bcrypt.compare(password, this.password)
 }
+
+UserSchema.methods.generateAccessToken = function(){
+    return jwt.sign(
+        {
+            _id: this._id,
+            email: this.email,
+            username: this.username,
+            fullName: this.fullName
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+        }
+    )
+}
+UserSchema.methods.generateRefreshToken = function(){
+    return jwt.sign(
+        {
+            _id: this._id,
+            email: this.email,
+            
+        },
+        process.env.REFRESH_TOKEN_SECRET,
+        {
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
+        }
+    )
+
+}
+
 
 export const User = mongoose.model("User", UserSchema)
