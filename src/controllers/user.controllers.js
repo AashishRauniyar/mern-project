@@ -2,6 +2,8 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import {ApiError} from "../utils/ApiError.js"
 import {User} from "../models/user.models.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
+import {ApiResponse} from "../utils/ApiResponse.js"
+
 
 
 const registerUser = asyncHandler( async (req, res) =>{
@@ -49,7 +51,16 @@ const registerUser = asyncHandler( async (req, res) =>{
         coverImage: coverImage?.url || ""
     })
 
-    const createdUser = await User.findById(user._id).select("-password")
+    const createdUser = await User.findById(user._id).select("-password -refreshToken")
+
+    if(!createdUser){
+        throw new ApiError(500, "Error while creating user")
+    }
+
+    return res.status(201).json(
+        new ApiResponse(201, createdUser, "User registered successfully"
+
+        )) 
 })
 
 
